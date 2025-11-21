@@ -1,12 +1,16 @@
+package cryptoportfolio;
+
 import javax.swing.*;
 import javax.swing.table.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.net.*;
 import java.util.*;
 import org.json.*;
 import javax.swing.Timer;
+import javax.imageio.ImageIO;
 
 public class CryptoPortfolioTracker extends JFrame {
     private DefaultTableModel tableModel;
@@ -16,6 +20,7 @@ public class CryptoPortfolioTracker extends JFrame {
     private JTextField amountField;
     private ArrayList<CryptoHolding> holdings;
     private Timer refreshTimer;
+    private Map<String, ImageIcon> imageCache;
     
     // Crypto data map: Symbol -> Full Name
     private final Map<String, String> cryptoMap = new LinkedHashMap<String, String>() {{
@@ -31,26 +36,83 @@ public class CryptoPortfolioTracker extends JFrame {
         put("avalanche-2", "Avalanche (AVAX)");
     }};
     
-    // Color map for crypto icons
-    private final Map<String, Color> colorMap = new HashMap<String, Color>() {{
-        put("Bitcoin (BTC)", new Color(247, 147, 26));
-        put("Ethereum (ETH)", new Color(98, 126, 234));
-        put("Cardano (ADA)", new Color(0, 51, 173));
-        put("Solana (SOL)", new Color(20, 241, 149));
-        put("Binance Coin (BNB)", new Color(243, 186, 47));
-        put("Ripple (XRP)", new Color(35, 137, 215));
-        put("Polkadot (DOT)", new Color(230, 0, 122));
-        put("Dogecoin (DOGE)", new Color(186, 151, 49));
-        put("Polygon (MATIC)", new Color(130, 71, 229));
-        put("Avalanche (AVAX)", new Color(232, 65, 66));
+    // Image file names for each crypto (from resources folder)
+    private final Map<String, String> imageFileMap = new HashMap<String, String>() {{
+        put("Bitcoin (BTC)", "bitcoin.png");
+        put("Ethereum (ETH)", "ethereum.png");
+        put("Cardano (ADA)", "cardano.png");
+        put("Solana (SOL)", "solana.png");
+        put("Binance Coin (BNB)", "binance.png");
+        put("Ripple (XRP)", "ripple.png");
+        put("Polkadot (DOT)", "polkadot.png");
+        put("Dogecoin (DOGE)", "dogecoin.png");
+        put("Polygon (MATIC)", "polygon.png");
+        put("Avalanche (AVAX)", "avalanche.png");
     }};
 
     public CryptoPortfolioTracker() {
+        imageCache = new HashMap<>();
         holdings = new ArrayList<>();
         loadHoldings();
+        loadCryptoImages();
         initializeUI();
         fetchPrices();
         startAutoRefresh();
+    }
+    
+    private void loadCryptoImages() {
+        for (Map.Entry<String, String> entry : imageFileMap.entrySet()) {
+            try {
+                // Try to load from resources folder in src directory
+                InputStream imageStream = getClass().getResourceAsStream("/resources/" + entry.getValue());
+                
+                if (imageStream != null) {
+                    BufferedImage image = ImageIO.read(imageStream);
+                    if (image != null) {
+                        Image scaledImage = image.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+                        imageCache.put(entry.getKey(), new ImageIcon(scaledImage));
+                    }
+                    imageStream.close();
+                } else {
+                    // If not found in classpath, try loading from file system
+                    File imageFile = new File("src/resources/" + entry.getValue());
+                    if (imageFile.exists()) {
+                        BufferedImage image = ImageIO.read(imageFile);
+                        if (image != null) {
+                            Image scaledImage = image.getScaledInstance(32, 32, Image.SCALE_SMOOTH);
+                            imageCache.put(entry.getKey(), new ImageIcon(scaledImage));
+                        }
+                    } else {
+                        System.err.println("Image not found: " + entry.getValue());
+                        imageCache.put(entry.getKey(), createPlaceholderIcon(entry.getKey()));
+                    }
+                }
+            } catch (Exception ex) {
+                System.err.println("Failed to load image for " + entry.getKey() + ": " + ex.getMessage());
+                imageCache.put(entry.getKey(), createPlaceholderIcon(entry.getKey()));
+            }
+        }
+    }
+    
+    private ImageIcon createPlaceholderIcon(String cryptoName) {
+        BufferedImage placeholder = new BufferedImage(32, 32, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = placeholder.createGraphics();
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        
+        // Draw a circle with first letter
+        g2d.setColor(new Color(100, 100, 100));
+        g2d.fillOval(0, 0, 32, 32);
+        
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        String symbol = cryptoName.substring(cryptoName.indexOf("(") + 1, cryptoName.indexOf(")"));
+        FontMetrics fm = g2d.getFontMetrics();
+        int x = (32 - fm.stringWidth(symbol.substring(0, 1))) / 2;
+        int y = ((32 - fm.getHeight()) / 2) + fm.getAscent();
+        g2d.drawString(symbol.substring(0, 1), x, y);
+        g2d.dispose();
+        
+        return new ImageIcon(placeholder);
     }
 
     private void initializeUI() {
@@ -479,7 +541,7 @@ public class CryptoPortfolioTracker extends JFrame {
         refreshTimer.start();
     }
     
-    // Custom cell renderer for crypto icons and colored text
+    // Custom cell renderer with crypto images
     class CryptoTableCellRenderer extends DefaultTableCellRenderer {
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, 
@@ -490,24 +552,14 @@ public class CryptoPortfolioTracker extends JFrame {
             setBackground(isSelected ? new Color(51, 65, 85) : new Color(30, 41, 59));
             setForeground(Color.WHITE);
             
-            if (column == 0) { // Cryptocurrency column with icon
+            if (column == 0) { // Cryptocurrency column with image
                 String cryptoName = (String) value;
                 JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
                 panel.setBackground(getBackground());
                 
-                // Create icon label
-                JLabel iconLabel = new JLabel();
-                iconLabel.setPreferredSize(new Dimension(35, 35));
-                iconLabel.setOpaque(true);
-                iconLabel.setBackground(colorMap.getOrDefault(cryptoName, Color.GRAY));
-                iconLabel.setHorizontalAlignment(SwingConstants.CENTER);
-                iconLabel.setVerticalAlignment(SwingConstants.CENTER);
-                iconLabel.setFont(new Font("Arial", Font.BOLD, 11));
-                iconLabel.setForeground(Color.WHITE);
-                
-                // Extract symbol from name
-                String symbol = cryptoName.substring(cryptoName.indexOf("(") + 1, cryptoName.indexOf(")"));
-                iconLabel.setText(symbol);
+                // Get crypto image
+                ImageIcon icon = imageCache.get(cryptoName);
+                JLabel iconLabel = new JLabel(icon);
                 
                 JLabel nameLabel = new JLabel(cryptoName);
                 nameLabel.setForeground(Color.WHITE);
