@@ -243,9 +243,21 @@ public class CryptoPortfolioTracker extends JFrame {
         
         // Custom header renderer
         JTableHeader header = portfolioTable.getTableHeader();
-        header.setBackground(new Color(51, 65, 85));
-        header.setForeground(new Color(203, 213, 225));
-        header.setFont(new Font("Arial", Font.BOLD, 16));
+        header.setDefaultRenderer(new DefaultTableCellRenderer() {
+        @Override
+        public Component getTableCellRendererComponent(JTable table, Object value,
+                boolean isSelected, boolean hasFocus, int row, int column) {
+                JLabel label = (JLabel) super.getTableCellRendererComponent(
+                        table, value, isSelected, hasFocus, row, column);
+                label.setBackground(new Color(37, 99, 235));
+                label.setForeground(Color.WHITE);
+                label.setFont(new Font("Arial", Font.BOLD, 12));
+                label.setHorizontalAlignment(SwingConstants.CENTER);
+                label.setBorder(BorderFactory.createEmptyBorder(10, 5, 10, 5));
+                label.setOpaque(true);
+                return label;
+            }
+        });
 
         // Custom cell renderer with icons
         portfolioTable.setDefaultRenderer(Object.class, new CryptoTableCellRenderer());
@@ -291,6 +303,7 @@ public class CryptoPortfolioTracker extends JFrame {
         cryptoComboBox = new JComboBox<>(cryptoNames);
         cryptoComboBox.setPreferredSize(new Dimension(250, 35));
         cryptoComboBox.setBackground(new Color(51, 65, 85));
+        cryptoComboBox.setBackground(Color.RED);
         cryptoComboBox.setForeground(Color.WHITE);
         
         cryptoPanel.add(cryptoLabel, BorderLayout.NORTH);
@@ -321,7 +334,7 @@ public class CryptoPortfolioTracker extends JFrame {
         buttonPanel.setBackground(new Color(30, 41, 59));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(17, 0, 0, 0));
         
-        JButton addButton = createStyledButton("Add", new Color(29, 133, 225));
+        JButton addButton = createStyledButton("Add", new Color(37, 99, 235));
         addButton.addActionListener(e -> addCrypto());
         
         buttonPanel.add(addButton);
@@ -589,7 +602,7 @@ public class CryptoPortfolioTracker extends JFrame {
         private JButton removeButton;
         
         public ButtonRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 14));
             setOpaque(true);
             
             //editButton = createCellButton("Edit", new Color(37, 99, 235));
@@ -661,7 +674,7 @@ public class CryptoPortfolioTracker extends JFrame {
         public ButtonEditor(JCheckBox checkBox) {
             super(checkBox);
             
-            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 5));
+            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 14));
             panel.setOpaque(true);
             
             editButton = new JButton("Edit");
