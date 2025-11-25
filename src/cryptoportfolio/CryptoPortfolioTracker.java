@@ -12,11 +12,12 @@ import org.json.*;
 import javax.swing.Timer;
 import javax.imageio.ImageIO;
 
-public class CryptoPortfolioTracker extends JFrame {
+public class CryptoPortfolioTracker extends JFrame  implements ButtonEditor.ActionListener {
     private DefaultTableModel tableModel;
     private JTable portfolioTable;
     private JLabel totalValueLabel;
     private JComboBox<String> cryptoComboBox;
+    private ButtonEditor buttonEditor;
     private JTextField amountField;
     private ArrayList<CryptoHolding> holdings;
     private Timer refreshTimer;
@@ -260,11 +261,12 @@ public class CryptoPortfolioTracker extends JFrame {
         });
 
         // Custom cell renderer with icons
-        portfolioTable.setDefaultRenderer(Object.class, new CryptoTableCellRenderer());
+        portfolioTable.setDefaultRenderer(Object.class, new CryptoTableCellRenderer(imageCache));
         
         // Button column
-        portfolioTable.getColumn("Actions").setCellRenderer(new ButtonRenderer());
-        portfolioTable.getColumn("Actions").setCellEditor(new ButtonEditor(new JCheckBox()));
+        portfolioTable.getColumn("Actions").setCellRenderer(new ButtonRenderer());        
+        buttonEditor = new ButtonEditor(new JCheckBox());
+        portfolioTable.getColumn("Actions").setCellEditor(buttonEditor);
         
         JScrollPane scrollPane = new JScrollPane(portfolioTable);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -581,201 +583,26 @@ public class CryptoPortfolioTracker extends JFrame {
         refreshTimer = new Timer(60000, e -> fetchPrices()); // Refresh every 60 seconds
         refreshTimer.start();
     }
-    
-    // Custom cell renderer with crypto images
-    class CryptoTableCellRenderer extends DefaultTableCellRenderer {
-        @Override
-        public Component getTableCellRendererComponent(JTable table, Object value, 
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            
-            Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-            
-            setBackground(isSelected ? new Color(51, 65, 85) : new Color(30, 41, 59));
-            setForeground(Color.WHITE);
-            
-            if (column == 0) { // Cryptocurrency column with image
-                String cryptoName = (String) value;
-                JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 5));
-                panel.setBackground(getBackground());
-                
-                // Get crypto image
-                ImageIcon icon = imageCache.get(cryptoName);
-                JLabel iconLabel = new JLabel(icon);
-                
-                JLabel nameLabel = new JLabel(cryptoName);
-                nameLabel.setForeground(Color.WHITE);
-                nameLabel.setFont(new Font("Arial", Font.PLAIN, 13));
-                
-                panel.add(iconLabel);
-                panel.add(nameLabel);
-                
-                return panel;
-            } else if (column == 4) { // 24h Change column
-                String changeStr = (String) value;
-                if (changeStr.startsWith("+")) {
-                    setForeground(new Color(74, 222, 128)); // Green
-                } else if (changeStr.startsWith("-")) {
-                    setForeground(new Color(248, 113, 113)); // Red
-                }
-                setHorizontalAlignment(SwingConstants.RIGHT);
-            } else if (column >= 1 && column <= 3) {
-                setHorizontalAlignment(SwingConstants.RIGHT);
-            }
-            
-            return c;
-        }
-    }
-    
-    // Button renderer for Actions column
-    class ButtonRenderer extends JPanel implements TableCellRenderer {
-        private JButton editButton;
-        private JButton removeButton;
-        
-        public ButtonRenderer() {
-            setLayout(new FlowLayout(FlowLayout.CENTER, 5, 14));
-            setOpaque(true);
-            
-            //editButton = createCellButton("Edit", new Color(37, 99, 235));
-            editButton = new JButton("Edit");
-            editButton.setFont(new Font("Arial", Font.PLAIN, 11));
-            editButton.setBackground(new Color(37, 99, 235));
-            editButton.setForeground(Color.WHITE);
-            editButton.setFocusPainted(false);
-            editButton.setBorderPainted(false);
-            editButton.setContentAreaFilled(true);
-            editButton.setOpaque(true);
-            editButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-            
-            //removeButton = createCellButton("Removedd", new Color(220, 38, 38));
-            removeButton = new JButton("Remove");
-            removeButton.setFont(new Font("Arial", Font.PLAIN, 11));
-            removeButton.setBackground(new Color(220, 38, 38));
-            removeButton.setForeground(Color.WHITE);
-            removeButton.setFocusPainted(false);
-            removeButton.setBorderPainted(false);
-            removeButton.setContentAreaFilled(true);
-            removeButton.setOpaque(true);
-            removeButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-            
-            add(editButton);
-            add(removeButton);
-        }
-        
-        public Component getTableCellRendererComponent(JTable table, Object value,
-                boolean isSelected, boolean hasFocus, int row, int column) {
-            setBackground(isSelected ? new Color(51, 65, 85) : new Color(30, 41, 59));
-            return this;
-        }
-        
-        private JButton createCellButton(String text, Color bgColor) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.PLAIN, 11));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setContentAreaFilled(true);
-        button.setOpaque(true);
-        button.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
 
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(bgColor.darker());
-            }
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(bgColor);
-            }
-        });
-
-        return button;
+    @Override
+    public void editCrypto() {
+        editHolding(buttonEditor.getCurrentRow());
     }
 
-    }
-    
-    // Button editor for Actions column
-    class ButtonEditor extends DefaultCellEditor {
-        private JPanel panel;
-        private JButton editButton;
-        private JButton removeButton;
-        private int currentRow;
-        
-        public ButtonEditor(JCheckBox checkBox) {
-            super(checkBox);
-            
-            panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 14));
-            panel.setOpaque(true);
-            
-            editButton = new JButton("Edit");
-            editButton.setFont(new Font("Arial", Font.PLAIN, 11));
-            editButton.setBackground(new Color(37, 99, 235));
-            editButton.setForeground(Color.WHITE);
-            editButton.setFocusPainted(false);
-            editButton.setBorderPainted(false);
-            editButton.setContentAreaFilled(true);
-            editButton.setOpaque(true);
-            editButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-            editButton.addActionListener(e -> {
-                fireEditingStopped();
-                editHolding(currentRow);
-            });
-            
-            removeButton = new JButton("Remove");
-            removeButton.setFont(new Font("Arial", Font.PLAIN, 11));
-            removeButton.setBackground(new Color(220, 38, 38));
-            removeButton.setForeground(Color.WHITE);
-            removeButton.setFocusPainted(false);
-            removeButton.setBorderPainted(false);
-            removeButton.setContentAreaFilled(true);
-            removeButton.setOpaque(true);
-            removeButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
-            
-            removeButton.addActionListener(e -> {
-                fireEditingStopped();
-                int confirm = JOptionPane.showConfirmDialog(
-                    CryptoPortfolioTracker.this,
-                    "Are you sure you want to remove this cryptocurrency?",
-                    "Confirm Removal",
-                    JOptionPane.YES_NO_OPTION
-                );
-                if (confirm == JOptionPane.YES_OPTION) {
-                    removeHolding(currentRow);
-                }
-            });
-            
-            panel.add(editButton);
-            panel.add(removeButton);
-        }
-        
-        public Component getTableCellEditorComponent(JTable table, Object value,
-                boolean isSelected, int row, int column) {
-            currentRow = row;
-            panel.setBackground(new Color(51, 65, 85));
-            return panel;
-        }
-        
-        public Object getCellEditorValue() {
-            return "Actions";
+    @Override
+    public void removeCrypto() {
+        int confirm = JOptionPane.showConfirmDialog(
+            CryptoPortfolioTracker.this,
+            "Are you sure you want to remove this cryptocurrency?",
+            "Confirm Removal",
+            JOptionPane.YES_NO_OPTION
+        );
+        if (confirm == JOptionPane.YES_OPTION) {
+            removeHolding(buttonEditor.getCurrentRow());
         }
     }
-    
-    // CryptoHolding class
-    static class CryptoHolding implements Serializable {
-        private static final long serialVersionUID = 1L;
-        String name;
-        double amount;
-        double priceUSD;
-        double change24h;
         
-        public CryptoHolding(String name, double amount) {
-            this.name = name;
-            this.amount = amount;
-            this.priceUSD = 0.0;
-            this.change24h = 0.0;
-        }
-    }
-    
+    //Main entry
     public static void main(String[] args) {
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
