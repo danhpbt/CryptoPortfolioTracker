@@ -175,7 +175,7 @@ public class CryptoPortfolioTracker extends JFrame {
         titlePanel.add(textPanel);
         
         // Refresh button
-        JButton refreshButton = createStyledButton("🔄 Refresh Prices", new Color(37, 99, 235));
+        JButton refreshButton = createStyledButton("🔄 Refresh Prices", new Color(73, 170, 77));
         refreshButton.addActionListener(e -> fetchPrices());
         
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -325,7 +325,7 @@ public class CryptoPortfolioTracker extends JFrame {
         buttonPanel.setBackground(new Color(30, 41, 59));
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(17, 0, 0, 0));
         
-        JButton addButton = createStyledButton("➕ Add", new Color(37, 99, 235));
+        JButton addButton = createStyledButton("➕ Add", new Color(29, 133, 225));
         addButton.addActionListener(e -> addCrypto());
         
         buttonPanel.add(addButton);
@@ -345,26 +345,49 @@ public class CryptoPortfolioTracker extends JFrame {
     }
     
     private JButton createStyledButton(String text, Color bgColor) {
-        JButton button = new JButton(text);
-        button.setFont(new Font("Arial", Font.BOLD, 13));
-        button.setBackground(bgColor);
-        button.setForeground(Color.WHITE);
-        button.setFocusPainted(false);
-        button.setBorderPainted(false);
-        button.setOpaque(true);
-        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
-        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+//        JButton button = new JButton(text);
+//        button.setFont(new Font("Arial", Font.BOLD, 13));
+//        button.setBackground(bgColor);
+//        button.setForeground(Color.WHITE);
+//        button.setFocusPainted(false);
+//        button.setBorderPainted(false);
+//        button.setOpaque(true);
+//        button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+//        button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+//        
+//        button.addMouseListener(new MouseAdapter() {
+//            public void mouseEntered(MouseEvent e) {
+//                button.setBackground(bgColor.darker());
+//            }
+//            public void mouseExited(MouseEvent e) {
+//                button.setBackground(bgColor);
+//            }
+//        });
+//        
+//        return button;
         
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent e) {
-                button.setBackground(bgColor.darker());
-            }
-            public void mouseExited(MouseEvent e) {
-                button.setBackground(bgColor);
-            }
-        });
-        
-        return button;
+            JButton button = new JButton(text);
+            button.setFont(new Font("Arial", Font.BOLD, 13));
+            button.setBackground(bgColor);
+            button.setForeground(Color.WHITE);
+            button.setFocusPainted(false);
+            button.setBorderPainted(false);
+            button.setContentAreaFilled(true);
+            button.setOpaque(true);
+            button.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+            button.setCursor(new Cursor(Cursor.HAND_CURSOR));
+            button.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+            button.addMouseListener(new MouseAdapter() {
+                public void mouseEntered(MouseEvent e) {
+                    button.setBackground(bgColor.darker());
+                }
+                public void mouseExited(MouseEvent e) {
+                    button.setBackground(bgColor);
+                }
+            });
+
+            return button;
     }
     
     private void addCrypto() {
