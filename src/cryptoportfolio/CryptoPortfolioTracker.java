@@ -303,8 +303,38 @@ public class CryptoPortfolioTracker extends JFrame {
         cryptoComboBox = new JComboBox<>(cryptoNames);
         cryptoComboBox.setPreferredSize(new Dimension(250, 35));
         cryptoComboBox.setBackground(new Color(51, 65, 85));
-        cryptoComboBox.setBackground(Color.RED);
         cryptoComboBox.setForeground(Color.WHITE);
+        
+        // Custom renderer for dropdown items
+        cryptoComboBox.setRenderer(new DefaultListCellRenderer() {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list, Object value,
+                    int index, boolean isSelected, boolean cellHasFocus) {
+                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+
+                if (isSelected) {
+                    setBackground(new Color(37, 99, 235));
+                    setForeground(Color.WHITE);
+                } else {
+                    setBackground(new Color(51, 65, 85));
+                    setForeground(Color.WHITE);
+                }
+
+                setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
+                return c;
+            }
+        });
+
+        // Style the ComboBox button area
+        cryptoComboBox.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
+            @Override
+            protected JButton createArrowButton() {
+                JButton button = super.createArrowButton();
+                button.setBackground(new Color(51, 65, 85));
+                button.setBorder(BorderFactory.createEmptyBorder());
+                return button;
+            }
+        });
         
         cryptoPanel.add(cryptoLabel, BorderLayout.NORTH);
         cryptoPanel.add(cryptoComboBox, BorderLayout.CENTER);
