@@ -312,9 +312,17 @@ public class CryptoPortfolioTracker extends JFrame  implements ButtonEditor.Acti
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value,
                     int index, boolean isSelected, boolean cellHasFocus) {
-                Component c = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+                JLabel label = (JLabel) super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
+        
+                 // Always set opaque
+                label.setOpaque(true);
 
-                if (isSelected) {
+                if (index == -1) {
+                    // This is the displayed value (not in dropdown)
+                    label.setBackground(new Color(51, 65, 85));
+                    label.setForeground(Color.WHITE);
+                } 
+                else if (isSelected) {
                     setBackground(new Color(37, 99, 235));
                     setForeground(Color.WHITE);
                 } else {
@@ -323,7 +331,7 @@ public class CryptoPortfolioTracker extends JFrame  implements ButtonEditor.Acti
                 }
 
                 setBorder(BorderFactory.createEmptyBorder(8, 10, 8, 10));
-                return c;
+                return label;
             }
         });
 
@@ -335,6 +343,12 @@ public class CryptoPortfolioTracker extends JFrame  implements ButtonEditor.Acti
                 button.setBackground(new Color(51, 65, 85));
                 button.setBorder(BorderFactory.createEmptyBorder());
                 return button;
+            }
+            
+            @Override
+            public void paintCurrentValueBackground(Graphics g, Rectangle bounds, boolean hasFocus) {
+                g.setColor(new Color(51, 65, 85));
+                g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
             }
         });
         
