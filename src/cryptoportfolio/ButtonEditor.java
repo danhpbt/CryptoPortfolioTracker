@@ -26,10 +26,11 @@ class ButtonEditor extends DefaultCellEditor {
     private JButton editButton;
     private JButton removeButton;
     private int currentRow;
-
-    public ButtonEditor(JCheckBox checkBox) {
+    private ActionListener actionListener;
+    public ButtonEditor(JCheckBox checkBox, ActionListener listener) {
         super(checkBox);
-
+        actionListener = listener;
+        
         panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 14));
         panel.setOpaque(true);
 
@@ -44,7 +45,7 @@ class ButtonEditor extends DefaultCellEditor {
         editButton.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         editButton.addActionListener(e -> {
             fireEditingStopped();
-            editCrypto();
+            actionListener.editCrypto();
         });
 
         removeButton = new JButton("Remove");
@@ -59,8 +60,7 @@ class ButtonEditor extends DefaultCellEditor {
 
         removeButton.addActionListener(e -> {
             fireEditingStopped();
-            removeCrypto();
-
+            actionListener.removeCrypto();
         });
 
         panel.add(editButton);
@@ -83,8 +83,8 @@ class ButtonEditor extends DefaultCellEditor {
     }
     
     interface ActionListener{
-        void editCrypto();
-        void removeCrypto();        
+        public void editCrypto();
+        public void removeCrypto();        
     }
 }
 

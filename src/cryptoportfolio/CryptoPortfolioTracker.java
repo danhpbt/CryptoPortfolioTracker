@@ -265,7 +265,7 @@ public class CryptoPortfolioTracker extends JFrame  implements ButtonEditor.Acti
         
         // Button column
         portfolioTable.getColumn("Actions").setCellRenderer(new ButtonRenderer());        
-        buttonEditor = new ButtonEditor(new JCheckBox());
+        buttonEditor = new ButtonEditor(new JCheckBox(), this);
         portfolioTable.getColumn("Actions").setCellEditor(buttonEditor);
         
         JScrollPane scrollPane = new JScrollPane(portfolioTable);
